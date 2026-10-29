@@ -1,21 +1,21 @@
 <!doctype html>
 <!--
-  Wingman file picker. Hosted on GitHub Pages because the Google Picker needs a
+  Fill Me In file picker. Hosted on GitHub Pages because the Google Picker needs a
   remote script, which MV3 extension pages may not load.
 
   Protocol (window.postMessage, origins checked on both sides):
-    picker → opener   { type: "wingman-picker:ready" }
-    opener → picker   { type: "wingman-picker:open", token, mimeTypes, multiselect }
-    picker → opener   { type: "wingman-picker:picked", files: [{ id, name, mimeType }] }
-                    | { type: "wingman-picker:cancelled" }
-                    | { type: "wingman-picker:error", message }
+    picker → opener   { type: "fillmein-picker:ready" }
+    opener → picker   { type: "fillmein-picker:open", token, mimeTypes, multiselect }
+    picker → opener   { type: "fillmein-picker:picked", files: [{ id, name, mimeType }] }
+                    | { type: "fillmein-picker:cancelled" }
+                    | { type: "fillmein-picker:error", message }
   The OAuth token is only held in memory and never stored.
 -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Wingman — choose a file</title>
+    <title>Fill Me In — choose a file</title>
     <style>
       body {
         font:
@@ -31,9 +31,9 @@
     </style>
   </head>
   <body>
-    <p id="status">Waiting for Wingman…</p>
+    <p id="status">Waiting for Fill Me In…</p>
     <script>
-      // Allowed Wingman extension origins (dev ID; add the Web Store ID when published).
+      // Allowed Fill Me In extension origins (dev ID; add the Web Store ID when published).
       const EXTENSION_ORIGINS = ["chrome-extension://ecpahlckhhpdkllbapnlgceafaehnolg"];
       const API_KEY = "AIzaSyAJOKJyTELUjsn0McnHEe2DUCnaXYGF0Pk";
       const APP_ID = "921593927653";
@@ -67,7 +67,7 @@
           .setOAuthToken(token)
           .setDeveloperKey(API_KEY)
           .setAppId(APP_ID)
-          .setTitle("Choose a file for Wingman")
+          .setTitle("Choose a file for Fill Me In")
           .setCallback((data) => {
             const action = data[google.picker.Response.ACTION];
             if (action === google.picker.Action.PICKED) {
@@ -76,10 +76,10 @@
                 name: d[google.picker.Document.NAME],
                 mimeType: d[google.picker.Document.MIME_TYPE],
               }));
-              reply({ type: "wingman-picker:picked", files });
+              reply({ type: "fillmein-picker:picked", files });
               window.close();
             } else if (action === google.picker.Action.CANCEL) {
-              reply({ type: "wingman-picker:cancelled" });
+              reply({ type: "fillmein-picker:cancelled" });
               window.close();
             }
           });
@@ -90,21 +90,21 @@
 
       window.addEventListener("message", (event) => {
         if (event.source !== opener || !EXTENSION_ORIGINS.includes(event.origin)) return;
-        if (event.data?.type !== "wingman-picker:open" || typeof event.data.token !== "string") return;
+        if (event.data?.type !== "fillmein-picker:open" || typeof event.data.token !== "string") return;
         openerOrigin = event.origin;
         loadPickerApi()
           .then(() => showPicker(event.data))
           .catch((e) => {
             status.textContent = "Couldn't load the Google file picker.";
-            reply({ type: "wingman-picker:error", message: String(e) });
+            reply({ type: "fillmein-picker:error", message: String(e) });
           });
       });
 
       if (!opener) {
-        status.textContent = "Open this page from the Wingman extension.";
+        status.textContent = "Open this page from the Fill Me In extension.";
       } else {
         // The opener's origin is unknown until it replies, so announce to each allowed origin.
-        for (const origin of EXTENSION_ORIGINS) opener.postMessage({ type: "wingman-picker:ready" }, origin);
+        for (const origin of EXTENSION_ORIGINS) opener.postMessage({ type: "fillmein-picker:ready" }, origin);
       }
     </script>
   </body>
